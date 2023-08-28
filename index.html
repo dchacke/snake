@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+</head>
+<body>
+  <h1>Snake</h1>
+
+  <div class="row">
+    <div class="col-8 offset-2 d-flex">
+      <canvas id="snake-canvas" width="500" height="300"></canvas>
+    </div>
+    <div class="col-12 text-center">
+      <h4 class="mt-4">Score: <span id="score">0</span></h4>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    let score = 0;
+    let resetScore = () => {
+      score = 0;
+      document.getElementById('score').innerText = score;
+    }
+
+    let restart = () => {
+      resetScore();
+      setTimeout(play);
+    }
+
+    let play = () => {
+      let canvas = document.getElementById('snake-canvas');
+      let ctx = canvas.getContext('2d');
+      let width = 500;
+      let height = 300;
+
+      let directions = {
+        'ArrowUp':    'up',
+        'ArrowRight': 'right',
+        'ArrowDown':  'down',
+        'ArrowLeft':  'left'
+      };
+
+      let direction = 'right';
+      let newDirection = direction;
+
+      canvas.style.margin = '0 auto';
+      canvas.style.border = '1px solid #bd6816';
+
+      window.onkeydown = e => {
+        if (directions.hasOwnProperty(e.key)) {
+          e.preventDefault();
+
+          if (
+            (direction === 'left' && directions[e.key] === 'right') ||
+            (direction === 'right' && directions[e.key] === 'left') ||
+            (direction === 'up' && directions[e.key] === 'down') ||
+            (direction === 'down' && directions[e.key] === 'up')
+          ) {
+            return;
+          }
+
+          newDirection = directions[e.key];
+        }
+      };
+
+      let randomXCoordinate = () => {
+        return Math.floor((Math.random() * width / 10)) * 10;
+      }
+
+      let randomYCoordinate = () => {
+        return Math.floor((Math.random() * height / 10)) * 10;
+      }
+
+      let treat;
+
+      let setTreat = () => {
+        treat = [randomXCoordinate(), randomYCoordinate()];
+      }
+
+      setTreat();
+
+      let increaseScore = () => {
+        score += 10;
+        document.getElementById('score').innerText = score;
+      };
+
+      let tick = snake => {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw treat
+        ctx.beginPath();
+        ctx.fillStyle = '#bd6816';
+        ctx.fillRect(treat[0], treat[1], 10, 10);
+        ctx.stroke();
+
+        direction = newDirection;
+
+        let head = snake[snake.length - 1];
+        let [x, y] = head;
+
+        if (direction === 'right') {
+          x += 10;
+        } else if (direction === 'left') {
+          x -= 10;
+        } else if (direction === 'up') {
+          y -= 10;
+        } else {
+          y += 10;
+        }
+
+        if (x < 0 || x >= width || y < 0 || y >= height) {
+          alert('Out of bounds!');
+          restart();
+          return;
+        }
+
+        let tail = snake.slice(0, snake.length - 1);
+
+        for (let i = 0; i < tail.length; i++) {
+          if (x === tail[i][0] && y === tail[i][1]) {
+            alert('You are not allowed to touch yourself. Be decent.');
+            restart();
+            return;
+          }
+        }
+
+        // Ate treat?
+        if (x === treat[0] && y === treat[1]) {
+          setTreat();
+          increaseScore();
+          snake.push([x, y]);
+        }
+
+        snake.shift();
+        snake.push([x, y]);
+
+        // Draw snake
+        snake.forEach(([x, y]) => {
+          ctx.beginPath();
+          ctx.fillStyle = '#007bff';
+          ctx.fillRect(x, y, 10, 10);
+          ctx.stroke();
+        });
+
+        setTimeout(tick, 70, snake);
+      };
+
+      tick([[100, 200], [110, 200]]);
+    };
+
+    play();
+  </script>
+</body>
+</html>
